@@ -1,0 +1,92 @@
+TITLE:	Full Model - Fixed Effects
+
+DATA:	
+	FILE IS 20190629_DaliaAVSafety_MPlus.txt;
+
+VARIABLE:	
+	NAMES ARE
+	R_ID	iso_num	
+    age	gen	inc	log_inc	
+    HHinc1	HHinc2	HHinc3	HHinc4	
+    edu_high	empC	ess	log_ess	
+    carown	q01D	
+    age_cen	gen_cen	inc_cen	linc_cen	
+    HHinc1_cen	HHinc2_cen	HHinc3_cen	HHinc4_cen	
+    eduH_cen	emp_cen	ess_cen	less_cen	
+    carown_cen	q01D_cen	
+    age_m	gen_m	inc_m	linc_m	
+    HHinc1_m	HHinc2_m	HHinc3_m	HHinc4_m	
+    eduH_m	emp_m	ess_m	less_m	
+    carown_m	q01D_m	
+    q16	BitAware	VeryAware
+    SafePerc14	SafePerc03
+    SafePred	
+    NotYetSafe	VerySafe;
+
+	
+  USEVARIABLES ARE
+    	iso_num
+    	age gen empC log_ess inc edu_high
+        carown q01D	
+        q16 SafePerc14 SafePred;
+  
+  CATEGORICAL = q16 SafePerc14;
+  
+  WITHIN = age gen empC log_ess inc edu_high
+        carown q01D;
+  
+  !BETWEEN = ;
+  
+  CLUSTER = iso_num;
+  IDVARIABLE = R_ID;	
+  MISSING = ALL (-9999);
+
+DEFINE:
+   CENTER age gen empC log_ess inc edu_high 
+          carown q01D (GROUPMEAN);
+
+ANALYSIS:
+    TYPE = TWOLEVEL;
+    !ESTIMATOR = WLSMV;
+    !STARTS = 30;
+    ESTIMATOR = BAYES;
+    PROCESSORS = 4;
+    CHAINS = 4;
+    BSEED = 200;
+    ALGORITHM = GIBBS(PX1); !default
+    BITERATIONS = 600000 (400000);
+    BCONVERGENCE = 0.01; !default is 0.05
+    THIN = 1; !default is to use all iterations
+    PRIOR = 2000; !view prior distribution by choosing Bayesian prior distributions from the Plot menu of the Mplus editor
+    !H1ITERATIONS = 7500;
+    !MITERATIONS = 5000;
+
+MODEL: 
+    %WITHIN%
+    q16 ON age gen empC log_ess inc edu_high
+           carown q01D;
+    SafePerc14 ON age gen empC log_ess inc edu_high 
+           carown q01D;
+    SafePred ON age gen empC log_ess inc edu_high 
+           carown q01D;
+    
+    q16 WITH SafePerc14 SafePred;
+    SafePerc14 WITH SafePred;
+    !q16 SafePerc14 
+    SafePred;
+    
+    %BETWEEN%
+    q16 SafePerc14 SafePred;
+    q16 WITH SafePerc14 SafePred;
+    SafePerc14 WITH SafePred;
+
+!Save random intercepts at country-level
+SAVEDATA:
+    FILE IS FullModel_Bayes_pairwisecomp_400000.dat;
+    SAVE = FSCORES(70,10);
+    FACTORS = q16 SafePerc14 SafePred;
+    
+OUTPUT: 
+    STANDARDIZED TECH1 TECH8;
+    
+PLOT: TYPE = PLOT2;
