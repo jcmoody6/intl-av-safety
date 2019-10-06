@@ -1,1 +1,1 @@
-This repository contains supplemental information for the Safety Science submission “International Perceptions on Autonomous Vehicle Safety”
+This repository contains supplemental information for the paper entitled “International Perceptions on Autonomous Vehicle Safety” published in Safety Science (DOI: 10.1016/j.ssci.2019.07.022).
